@@ -1,0 +1,78 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Produtor {
+  id            Int           @id @default(autoincrement())
+  documento     String        @unique
+  tipoDocumento TipoDocumento
+  nome          String
+  propriedades  Propriedade[]
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  @@map("produtores")
+}
+
+model Propriedade {
+  id               Int       @id @default(autoincrement())
+  nome             String
+  cidade           String
+  estado           String
+  areaTotal        Float     @map("area_total_ha")
+  areaAgricultavel Float     @map("area_agricultavel_ha")
+  areaVegetacao    Float     @map("area_vegetacao_ha")
+  produtorId       Int       @map("produtor_id")
+  produtor         Produtor  @relation(fields: [produtorId], references: [id])
+  safras           Safra[]
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  Cultura          Cultura[]
+
+  @@map("propriedades")
+}
+
+model Safra {
+  id            Int         @id @default(autoincrement())
+  nome          String // Ex: "2023/2024", "Safra de Verão 2023"
+  dataInicio    DateTime    @map("data_inicio")
+  dataFim       DateTime?   @map("data_fim")
+  propriedadeId Int         @map("propriedade_id")
+  propriedade   Propriedade @relation(fields: [propriedadeId], references: [id])
+  culturas      Cultura[]
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+
+  @@map("safras")
+}
+
+model Cultura {
+  id            Int         @id @default(autoincrement())
+  nome          String
+  variedade     String?
+  areaPlantada  Float       @map("area_plantada_ha")
+  safraId       Int         @map("safra_id")
+  safra         Safra       @relation(fields: [safraId], references: [id])
+  propriedadeId Int         @map("propriedade_id")
+  propriedade   Propriedade @relation(fields: [propriedadeId], references: [id])
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+
+  @@map("culturas")
+}
+
+enum TipoDocumento {
+  CPF
+  CNPJ
+}
